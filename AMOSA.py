@@ -18,7 +18,7 @@ import sys, copy, random, time
 import numpy as np
 import matplotlib.pyplot as plt
 from enum import Enum
-
+from typing import List, Dict
 class AMOSAConfig:
     def __init__(
             self,
@@ -87,7 +87,7 @@ class AMOSA:
         self.__old_f = []
         self.__phy = []
 
-    def __init__(self, config):
+    def __init__(self, config : AMOSAConfig):
         self.__archive_hard_limit = config.archive_hard_limit
         self.__archive_soft_limit = config.archive_soft_limit
         self.__archive_gamma = config.archive_gamma
@@ -106,7 +106,7 @@ class AMOSA:
         self.__old_f = []
         self.__phy = []
 
-    def minimize(self, problem):
+    def minimize(self, problem : Problem):
         self.__parameters_check()
         self.__archive = []
         self.__old_f = None
@@ -128,6 +128,9 @@ class AMOSA:
                 s_dominating_y = [s for s in self.__archive if dominates(s, y)]
                 k_s_dominating_y = len(s_dominating_y)
                 s_dominated_by_y = [s for s in self.__archive if dominates(y, s)]
+                ####
+                # aqui empiezan los 3 casos del algoritmo
+                ###
                 k_s_dominated_by_y = len(s_dominated_by_y)
                 if dominates(x, y) and k_s_dominating_y >= 0:
                     delta_avg = (sum([domination_amount(s, y, fitness_range) for s in s_dominating_y]) + domination_amount(x, y, fitness_range)) / (k_s_dominating_y + 1)
@@ -225,7 +228,7 @@ class AMOSA:
         if self.__cooling_factor <= 0 or self.__cooling_factor >= 1:
             raise RuntimeError("The cooling factor for the temperature of the matter must be in the (0, 1) range")
 
-    def __initialize_archive(self, problem):
+    def __initialize_archive(self, problem : Problem):
         print("Initializing archive...")
         self.__n_eval = self.__archive_gamma * self.__archive_soft_limit * self.__hill_climbing_iterations
         num_of_initial_candidate_solutions = self.__archive_gamma * self.__archive_soft_limit
@@ -237,7 +240,7 @@ class AMOSA:
         for x in initial_candidate_solutions:
             self.__add_to_archive(x)
 
-    def __add_to_archive(self, x):
+    def __add_to_archive(self, x : dict):
         if len(self.__archive) == 0:
             self.__archive.append(x)
         else:
@@ -245,7 +248,7 @@ class AMOSA:
             if not any([dominates(y, x) or is_the_same(x, y) for y in self.__archive]):
                 self.__archive.append(x)
 
-    def __archive_clustering(self, problem):
+    def __archive_clustering(self, problem : Problem):
         if problem.num_of_constraints > 0:
             feasible = [s for s in self.__archive if all([g <= 0 for g in s["g"]])]
             non_feasible = [s for s in self.__archive if all([g > 0 for g in s["g"]])]
@@ -258,11 +261,11 @@ class AMOSA:
         else:
             do_clustering(self.__archive, self.__archive_hard_limit)
 
-    def __remove_infeasible(self, problem):
+    def __remove_infeasible(self, problem : Problem):
         if problem.num_of_constraints > 0:
             self.__archive = [s for s in self.__archive if all([g <= 0 for g in s["g"]])]
 
-    def __print_header(self, problem):
+    def __print_header(self, problem : Problem):
         if problem.num_of_constraints == 0:
             print("\n  +-{:>12}-+-{:>10}-+-{:>6}-+-{:>10}-+-{:>10}-+-{:>10}-+".format("-" * 12, "-" * 10, "-" * 6, "-" * 10, "-" * 10, "-" * 10))
             print("  | {:>12} | {:>10} | {:>6} | {:>10} | {:>10} | {:>10} |".format("temp.", "# eval", " # nds", "D*", "Dnad", "phi"))
@@ -272,7 +275,7 @@ class AMOSA:
             print("  | {:>12} | {:>10} | {:>6} | {:>6} | {:>10} | {:>10} | {:>10} | {:>10} | {:>10} |".format("temp.", "# eval", "# nds", "# feas", "cv min", "cv avg", "D*", "Dnad", "phi"))
             print("  +-{:>12}-+-{:>10}-+-{:>6}-+-{:>6}-+-{:>10}-+-{:>10}-+-{:>10}-+-{:>10}-+-{:>10}-+".format("-" * 12, "-" * 10, "-" * 6, "-" * 6, "-" * 10, "-" * 10, "-" * 10, "-" * 10, "-" * 10))
 
-    def __print_statistics(self, problem):
+    def __print_statistics(self, problem : Problem):
         self.__n_eval += self.__annealing_iterations
         delta_nad, delta_ideal, phy = self.__compute_deltas()
         self.__phy.append(phy)
@@ -311,7 +314,10 @@ class AMOSA:
         f = [s["f"] for s in self.__archive] + [x["f"], y["f"]]
         return np.max(f, axis = 0) - np.min(f, axis=0)
 
-def hill_climbing(problem, x, max_iterations):
+def hill_climbing(problem : AMOSA.Problem, x : dict, max_iterations : int):
+    """
+    
+    """
     d, up = hill_climbing_direction(problem)
     for _ in range(max_iterations):
         y = copy.deepcopy(x)
@@ -322,7 +328,7 @@ def hill_climbing(problem, x, max_iterations):
             d, up = hill_climbing_direction(problem, d)
     return x
 
-def random_point(problem):
+def random_point(problem : AMOSA.Problem):
     x = {
         "x": [ l if l == u else random.randrange(l, u) if t == AMOSA.Type.INTEGER else random.uniform(l, u) for l, u, t in zip(problem.lower_bound, problem.upper_bound, problem.types)],
         "f": [0] * problem.num_of_objectives,
@@ -330,7 +336,7 @@ def random_point(problem):
     get_objectives(problem, x)
     return x
 
-def lower_point(problem):
+def lower_point(problem : AMOSA.Problem):
     x = {
         "x": problem.lower_bound,
         "f": [0] * problem.num_of_objectives,
@@ -338,7 +344,7 @@ def lower_point(problem):
     get_objectives(problem, x)
     return x
 
-def upper_point(problem):
+def upper_point(problem : AMOSA.Problem):
     x = {
         "x": problem.upper_bound,
         "f": [0] * problem.num_of_objectives,
@@ -364,7 +370,7 @@ def random_perturbation(problem, s):
     get_objectives(problem, z)
     return z
 
-def hill_climbing_direction(problem, c_d = None):
+def hill_climbing_direction(problem : AMOSA.Problem, c_d = None):
     if c_d is None:
         return random.randrange(0, problem.num_of_variables), 1 if random.random() > 0.5 else -1
     else:
@@ -374,7 +380,7 @@ def hill_climbing_direction(problem, c_d = None):
             d = random.randrange(0, problem.num_of_variables)
         return d, up
 
-def hill_climbing_adaptive_step(problem, s, d, up):
+def hill_climbing_adaptive_step(problem : AMOSA.Problem, s : dict, d : int, up : int):
     lower_bound = problem.lower_bound[d] - s["x"][d]
     upper_bound = problem.upper_bound[d] - s["x"][d]
     if (up == -1 and lower_bound == 0) or (up == 1 and upper_bound == 0):
@@ -390,7 +396,7 @@ def hill_climbing_adaptive_step(problem, s, d, up):
     s["x"][d] += step
     get_objectives(problem, s)
 
-def do_clustering(archive, hard_limit):
+def do_clustering(archive : List[Dict], hard_limit : int): # en esta parte se tarda un chorro, tal vez pueda optimizarla
     while len(archive) > hard_limit:
         d = np.array([[np.linalg.norm(np.array(i["f"]) - np.array(j["f"])) if not np.array_equal(np.array(i["x"]), np.array(j["x"])) else np.nan for j in archive] for i in archive])
         try:
@@ -402,20 +408,20 @@ def do_clustering(archive, hard_limit):
             # print("Clustering cannot be performed anymore")
             return
 
-def get_objectives(problem, s):
+def get_objectives(problem : AMOSA.Problem, s : dict):
     out = {"f": [0] * problem.num_of_objectives,
            "g": [0] * problem.num_of_constraints if problem.num_of_constraints > 0 else None}
     problem.evaluate(s["x"], out)
     s["f"] = out["f"]
     s["g"] = out["g"]
 
-def is_the_same(x, y):
+def is_the_same(x : dict, y : dict):
     return x["x"] == y["x"]
 
-def not_the_same(x, y):
+def not_the_same(x : dict, y : dict):
     return x["x"] != y["x"]
 
-def dominates(x, y):
+def dominates(x : dict, y : dict):
     if x["g"] is None:
         return all( i <= j for i, j in zip(x["f"], y["f"]) ) and any( i < j for i, j in zip(x["f"], y["f"]) )
     else:
