@@ -119,11 +119,11 @@ class AMOSA:
             self.__archive_clustering(problem)
         self.__print_header(problem)
         self.__current_temperature = self.__initial_temperature
-        x = random.choice(self.__archive)
+        x = random.choice(self.__archive) # escoger una solucion random del archivo
         self.__print_statistics(problem)
-        while self.__current_temperature > self.__final_temperature:
+        while self.__current_temperature > self.__final_temperature: #empieza el algoritmo
             for i in range(self.__annealing_iterations):
-                y = random_perturbation(problem, x)
+                y = random_perturbation(problem, x) 
                 fitness_range = self.__compute_fitness_range(x, y)
                 s_dominating_y = [s for s in self.__archive if dominates(s, y)]
                 k_s_dominating_y = len(s_dominating_y)
@@ -132,12 +132,12 @@ class AMOSA:
                 # aqui empiezan los 3 casos del algoritmo
                 ###
                 k_s_dominated_by_y = len(s_dominated_by_y)
-                if dominates(x, y) and k_s_dominating_y >= 0:
+                if dominates(x, y) and k_s_dominating_y >= 0: #caso 1 cuando la generada es peor que la que se uso para generarla y ademas la dominan en el archivo
                     delta_avg = (sum([domination_amount(s, y, fitness_range) for s in s_dominating_y]) + domination_amount(x, y, fitness_range)) / (k_s_dominating_y + 1)
                     if accept(sigmoid(-delta_avg * self.__current_temperature)):
                         x = y
-                elif not dominates(x, y) and not dominates(y, x):
-                    if k_s_dominating_y >= 1:
+                elif not dominates(x, y) and not dominates(y, x): #caso 2
+                    if k_s_dominating_y >= 1: #revisa la 
                         delta_avg = sum([domination_amount(s, y, fitness_range) for s in s_dominating_y])  / k_s_dominating_y
                         if accept(sigmoid(-delta_avg * self.__current_temperature)):
                             x = y
@@ -146,7 +146,7 @@ class AMOSA:
                         if len(self.__archive) > self.__archive_soft_limit:
                             self.__archive_clustering(problem)
                         x = y
-                elif dominates(y, x):
+                elif dominates(y, x): #caso 3
                     if k_s_dominating_y >= 1:
                         delta_dom = [domination_amount(s, y, fitness_range) for s in s_dominating_y]
                         if accept(sigmoid(min(delta_dom))):
@@ -167,9 +167,11 @@ class AMOSA:
                     self.__current_temperature = self.__final_temperature
                 else:
                     self.__current_temperature *= self.__cooling_factor
-        if len(self.__archive) > self.__archive_hard_limit:
+        
+        if len(self.__archive) > self.__archive_hard_limit: #si hay mas soluciones que las permitidas, has el clustering
             self.__archive_clustering(problem)
-        self.__remove_infeasible(problem)
+
+        self.__remove_infeasible(problem) # quita las 
         self.__print_statistics(problem)
         self.duration = time.time() - self.duration
 
@@ -236,7 +238,7 @@ class AMOSA:
         if self.__hill_climbing_iterations > 0:
             for i in range(num_of_initial_candidate_solutions):
                 print(f"  {i + 1}/{num_of_initial_candidate_solutions}                                                  ", end = "\r", flush = True)
-                initial_candidate_solutions.append(hill_climbing(problem, random_point(problem), self.__hill_climbing_iterations))
+                initial_candidate_solutions.append(hill_climbing(problem, random_point(problem), self.__hill_climbing_iterations)) #inicia en un punto aleatorio
         for x in initial_candidate_solutions:
             self.__add_to_archive(x)
 
@@ -316,7 +318,8 @@ class AMOSA:
 
 def hill_climbing(problem : AMOSA.Problem, x : dict, max_iterations : int):
     """
-    
+    este es el hill climbing, revisa la direccion y luego saca un paso adaptativo 
+    checa la dominacia y si no domina, cambia la direccion
     """
     d, up = hill_climbing_direction(problem)
     for _ in range(max_iterations):
@@ -352,7 +355,10 @@ def upper_point(problem : AMOSA.Problem):
     get_objectives(problem, x)
     return x
 
-def random_perturbation(problem, s):
+def random_perturbation(problem : AMOSA.Problem, s : dict):
+    """
+    Modificar la solucion para generar otra solucion, mover el espacio de busqueda
+    """
     z = copy.deepcopy(s)
     step = 0
     d, up = hill_climbing_direction(problem)
@@ -390,7 +396,7 @@ def hill_climbing_adaptive_step(problem : AMOSA.Problem, s : dict, d : int, up :
         while step == 0:
             step = random.randrange(lower_bound, 0) if up == -1 else random.randrange(0, upper_bound + 1)
     else:
-        step = random.uniform(lower_bound, 0) if up == -1 else random.uniform(0, upper_bound)
+        step = random.uniform(lower_bound, 0) if up == -1 else random.uniform(0, upper_bound) #aqui genera un cambio super brusco en el vecindario
         while step == 0:
             step = random.uniform(lower_bound, 0) if up == -1 else random.uniform(0, upper_bound)
     s["x"][d] += step
@@ -429,11 +435,11 @@ def dominates(x : dict, y : dict):
                  (any(i > 0 for i in x["g"]) and any(i > 0 for i in y["g"]) and all([ i <= j for i, j in zip(x["g"], y["g"]) ]) and any([ i < j for i, j in zip(x["g"], y["g"]) ])) or #x and y are both infeasible, but x has a lower constraint violation
                  (all(i <= 0 for i in x["g"]) and all(i <= 0 for i in y["g"]) and all([ i <= j for i, j in zip(x["f"], y["f"]) ]) and any([ i < j for i, j in zip(x["f"], y["f"]) ]))) # both are feasible, but x dominates y in the usual sense
 
-def accept(probability):
+def accept(probability): # ver si cambiar o no la sol
     return random.random() < probability
 
 def domination_amount(x, y, r):
     return np.prod([ abs(i - j) / k for i, j, k in zip (x["f"], y["f"], r) ])
 
-def sigmoid(x):
-    return 1 / (1 + np.exp(np.array(-x, dtype=np.float128)))
+def sigmoid(x): #calcular la probabilidad dada la delta avg
+    return 1 / (1 + np.exp(np.array(-x, dtype=np.float128))) 
