@@ -168,10 +168,10 @@ class AMOSA:
                 else:
                     self.__current_temperature *= self.__cooling_factor
         
-        if len(self.__archive) > self.__archive_hard_limit: #si hay mas soluciones que las permitidas, has el clustering
+        if len(self.__archive) > self.__archive_hard_limit: #si hay mas soluciones que las permitidas, haz el clustering
             self.__archive_clustering(problem)
 
-        self.__remove_infeasible(problem) # quita las 
+        self.__remove_infeasible(problem) # quita las que no son buenas
         self.__print_statistics(problem)
         self.duration = time.time() - self.duration
 
@@ -184,7 +184,7 @@ class AMOSA:
     def constraint_violation(self):
         return np.array([s["g"] for s in self.__archive])
 
-    def plot_pareto(self, problem, pdf_file, fig_title = "Pareto front", axis_labels = ["f0", "f1", "f2"]):
+    def plot_pareto(self, problem: Problem, pdf_file, fig_title = "Pareto front", axis_labels = ["f0", "f1", "f2"]):
         F = self.pareto_front()
         if problem.num_of_objectives == 2:
             plt.figure(figsize=(10, 10), dpi=300)
@@ -204,7 +204,7 @@ class AMOSA:
             plt.tight_layout()
             plt.savefig(pdf_file, bbox_inches='tight', pad_inches=0)
 
-    def save_results(self, problem, csv_file):
+    def save_results(self, problem : Problem, csv_file):
         original_stdout = sys.stdout
         row_format = "{:};" * problem.num_of_objectives + "{:};" * problem.num_of_variables
         with open(csv_file, "w") as file:
@@ -435,7 +435,7 @@ def dominates(x : dict, y : dict):
                  (any(i > 0 for i in x["g"]) and any(i > 0 for i in y["g"]) and all([ i <= j for i, j in zip(x["g"], y["g"]) ]) and any([ i < j for i, j in zip(x["g"], y["g"]) ])) or #x and y are both infeasible, but x has a lower constraint violation
                  (all(i <= 0 for i in x["g"]) and all(i <= 0 for i in y["g"]) and all([ i <= j for i, j in zip(x["f"], y["f"]) ]) and any([ i < j for i, j in zip(x["f"], y["f"]) ]))) # both are feasible, but x dominates y in the usual sense
 
-def accept(probability): # ver si cambiar o no la sol
+def accept(probability : float): # ver si cambiar o no la sol
     return random.random() < probability
 
 def domination_amount(x, y, r):
