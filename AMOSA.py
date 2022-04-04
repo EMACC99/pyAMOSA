@@ -18,7 +18,7 @@ import sys, copy, random, time
 import numpy as np
 import matplotlib.pyplot as plt
 from enum import Enum
-from typing import List, Dict
+from typing import List, Dict, Tuple
 class AMOSAConfig:
     def __init__(
             self,
@@ -48,7 +48,7 @@ class AMOSA:
         REAL = 1
 
     class Problem:
-        def __init__(self, num_of_variables, types, lower_bounds, upper_bounds, num_of_objectives, num_of_constraints):
+        def __init__(self, * ,num_of_variables, types, lower_bounds, upper_bounds, num_of_objectives, num_of_constraints):
             self.num_of_variables = num_of_variables
             self.types = types
             self.lower_bound = lower_bounds
@@ -246,8 +246,8 @@ class AMOSA:
         if len(self.__archive) == 0:
             self.__archive.append(x)
         else:
-            self.__archive = [y for y in self.__archive if not dominates(x, y)]
-            if not any([dominates(y, x) or is_the_same(x, y) for y in self.__archive]):
+            self.__archive = [y for y in self.__archive if not dominates(x, y)] #las que no son dominadas por la nueva solucion
+            if not any([dominates(y, x) or is_the_same(x, y) for y in self.__archive]): # si ninguna y domina a x o x es la misma que y
                 self.__archive.append(x)
 
     def __archive_clustering(self, problem : Problem):
@@ -376,10 +376,14 @@ def random_perturbation(problem : AMOSA.Problem, s : dict):
     get_objectives(problem, z)
     return z
 
-def hill_climbing_direction(problem : AMOSA.Problem, c_d = None):
+def hill_climbing_direction(problem : AMOSA.Problem, c_d : dict = None) -> Tuple:
+    """
+    problem : `AMOSA.Problem`. The problem definition
+    c_d : `dict` default : `None`. The previous solution
+    """
     if c_d is None:
-        return random.randrange(0, problem.num_of_variables), 1 if random.random() > 0.5 else -1
-    else:
+        return random.randrange(0, problem.num_of_variables), 1 if random.random() > 0.5 else -1 #define la variable y la direccion que se va a mutar primero
+    else: #seleccionamos otra variable distinta a la anterior al azar
         up = 1 if random.random() > 0.5 else -1
         d = random.randrange(0, problem.num_of_variables)
         while c_d == d:
@@ -387,20 +391,27 @@ def hill_climbing_direction(problem : AMOSA.Problem, c_d = None):
         return d, up
 
 def hill_climbing_adaptive_step(problem : AMOSA.Problem, s : dict, d : int, up : int):
+    """
+    problema : `AMOSA.Problem`. The problem definition
+    s  : `dict`. The solution
+    d  : `int`. The variable
+    up : `int`. The direcction (-1, 1)
+    """
+    #sacamos los limites inferiores y superiores 
     lower_bound = problem.lower_bound[d] - s["x"][d]
     upper_bound = problem.upper_bound[d] - s["x"][d]
-    if (up == -1 and lower_bound == 0) or (up == 1 and upper_bound == 0):
+    if (up == -1 and lower_bound == 0) or (up == 1 and upper_bound == 0): #si mi paso va fuera de bounds
         return 0
-    if problem.types[d] == AMOSA.Type.INTEGER:
-        step = random.randrange(lower_bound, 0) if up == -1 else random.randrange(0, upper_bound + 1)
+    if problem.types[d] == AMOSA.Type.INTEGER: #si son enteros
+        step = random.randrange(lower_bound, 0) if up == -1 else random.randrange(0, upper_bound + 1) #puede generar cambios bruscos en el vecindario o no tanto 
         while step == 0:
             step = random.randrange(lower_bound, 0) if up == -1 else random.randrange(0, upper_bound + 1)
     else:
         step = random.uniform(lower_bound, 0) if up == -1 else random.uniform(0, upper_bound) #aqui genera un cambio super brusco en el vecindario
         while step == 0:
             step = random.uniform(lower_bound, 0) if up == -1 else random.uniform(0, upper_bound)
-    s["x"][d] += step
-    get_objectives(problem, s)
+    s["x"][d] += step # muta la solucion en esta variable
+    get_objectives(problem, s) # re evaluamos la solucion
 
 def do_clustering(archive : List[Dict], hard_limit : int): # en esta parte se tarda un chorro, tal vez pueda optimizarla
     while len(archive) > hard_limit:
