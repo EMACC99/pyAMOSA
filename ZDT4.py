@@ -19,7 +19,11 @@ from AMOSA import *
 
 class ZDT4(AMOSA.Problem):
     def __init__(self):
-        AMOSA.Problem.__init__(self, 10, [AMOSA.Type.REAL] * 10, [0, -10, -10, -10, -10, -10, -10, -10, -10, -10], [1, 10, 10, 10, 10, 10, 10, 10, 10, 10], 2, 0)
+        AMOSA.Problem.__init__(self, num_of_variables= 10,
+                                types=[AMOSA.Type.REAL] * 10, 
+                                lower_bounds = [0, -10, -10, -10, -10, -10, -10, -10, -10, -10],
+                                upper_bounds= [1, 10, 10, 10, 10, 10, 10, 10, 10, 10], 
+                                num_of_objectives= 2, num_of_constraints= 0)
 
     def evaluate(self, x, out):
         f = x[0]

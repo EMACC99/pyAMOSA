@@ -20,7 +20,10 @@ from AMOSA import *
 class ZDT3(AMOSA.Problem):
     def __init__(self):
         n_var = 30
-        AMOSA.Problem.__init__(self, n_var, [AMOSA.Type.REAL] * n_var, [0] * n_var, [1] * n_var, 2, 0)
+        AMOSA.Problem.__init__(self, num_of_variables= n_var,
+                               types= [AMOSA.Type.REAL] * n_var,
+                               lower_bounds= [0] * n_var, upper_bounds= [1] * n_var,
+                               num_of_objectives= 2, num_of_constraints= 0)
 
     def evaluate(self, x, out):
         f = x[0]
