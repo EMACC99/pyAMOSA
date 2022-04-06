@@ -122,7 +122,7 @@ class AMOSA:
         x = random.choice(self.__archive) # escoger una solucion random del archivo
         self.__print_statistics(problem)
         while self.__current_temperature > self.__final_temperature: #empieza el algoritmo
-            for i in range(self.__annealing_iterations):
+            for _ in range(self.__annealing_iterations):
                 y = random_perturbation(problem, x) 
                 fitness_range = self.__compute_fitness_range(x, y)
                 s_dominating_y = [s for s in self.__archive if dominates(s, y)]
