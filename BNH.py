@@ -19,7 +19,10 @@ from AMOSA import *
 
 class BNH(AMOSA.Problem):
     def __init__(self):
-        AMOSA.Problem.__init__(self, 2, [AMOSA.Type.REAL] * 2, [0]*2, [5, 3], 2, 2)
+        AMOSA.Problem.__init__(self, num_of_variables= 2,
+                               types = [AMOSA.Type.REAL] * 2,
+                               lower_bounds= [0]*2, upper_bounds= [5, 3],
+                               num_of_objectives= 2, num_of_constraints= 2)
 
     def evaluate(self, x, out):
         f1 = 4 * x[0] ** 2 + 4 * x[1] ** 2

@@ -19,7 +19,10 @@ from AMOSA import *
 
 class OSY(AMOSA.Problem):
     def __init__(self):
-        AMOSA.Problem.__init__(self, 6, [AMOSA.Type.REAL] * 6, [0, 0, 1, 0, 1, 0], [10, 10, 5, 6, 5, 10], 2, 6)
+        AMOSA.Problem.__init__(self, num_of_variables = 6, 
+                               types= [AMOSA.Type.REAL] * 6, 
+                               lower_bounds= [0, 0, 1, 0, 1, 0], upper_bounds= [10, 10, 5, 6, 5, 10],
+                               num_of_objectives= 2, num_of_constraints= 6)
 
     def evaluate(self, x, out):
         f1 = -(25 * (x[0] - 2) ** 2 + (x[1] - 2) ** 2 + (x[2] - 1) ** 2 + (x[3] - 4) ** 2 + (x[4] - 1) ** 2 )
