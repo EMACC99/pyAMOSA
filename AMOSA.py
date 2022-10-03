@@ -16,9 +16,20 @@ Street, Fifth Floor, Boston, MA 02110-1301, USA.
 """
 import sys, copy, random, time
 import numpy as np
+import torch
 import matplotlib.pyplot as plt
 from enum import Enum
 from typing import List, Dict, Tuple
+
+
+if torch.cuda.is_available():
+    device = torch.device("cuda")
+elif torch.backends.mps.is_available():
+    device = torch.device("mps")
+else:
+    device = torch.device("cpu")
+
+print(f"using {device=}")
 
 
 class AMOSAConfig:
@@ -189,7 +200,7 @@ class AMOSA:
                             for s in s_dominating_y
                         ]
                         if accept(sigmoid(min(delta_dom))):
-                            x = self.__archive[np.argmin(delta_dom)]
+                            x = self.__archive[torch.argmin(delta_dom)]
                     elif (
                         k_s_dominating_y == 0 and k_s_dominated_by_y == 0
                     ) or k_s_dominated_by_y >= 1:
@@ -221,13 +232,13 @@ class AMOSA:
         self.duration = time.time() - self.duration
 
     def pareto_front(self) -> np.ndarray:
-        return np.array([s["f"] for s in self.__archive])
+        return torch.tensor([s["f"] for s in self.__archive], device=device)
 
     def pareto_set(self) -> np.ndarray:
-        return np.array([s["x"] for s in self.__archive])
+        return torch.tensor([s["x"] for s in self.__archive], device=device)
 
     def constraint_violation(self):
-        return np.array([s["g"] for s in self.__archive])
+        return torch.tensor([s["g"] for s in self.__archive], device=device)
 
     def plot_pareto(
         self,
@@ -455,47 +466,50 @@ class AMOSA:
         )
 
     def __compute_deltas(self):
-        f = np.array([s["f"] for s in self.__archive])
+        f = torch.tensor([s["f"] for s in self.__archive], device=device)
         if self.__nadir is None and self.__ideal is None and self.__old_f is None:
-            self.__nadir = np.max(f, axis=0)
-            self.__ideal = np.min(f, axis=0)
-            self.__old_f = np.array(
+            self.__nadir = torch.max(f, axis=0)
+            self.__ideal = torch.min(f, axis=0)
+            self.__old_f = torch.tensor(
                 [
                     [
                         (p - i) / (n - i)
                         for p, i, n in zip(x, self.__ideal, self.__nadir)
                     ]
-                    for x in f[:]
-                ]
+                    for x in f
+                ],
+                device=device,
             )
-            return np.inf, np.inf, 0
+            return torch.inf, torch.inf, 0
         else:
-            nadir = np.max(f, axis=0)
-            ideal = np.min(f, axis=0)
-            delta_nad = np.max(
+            nadir = torch.max(f, axis=0)
+            ideal = torch.min(f, axis=0)
+            delta_nad = torch.max(
                 [
                     (nad_t_1 - nad_t) / (nad_t_1 - id_t)
                     for nad_t_1, nad_t, id_t in zip(self.__nadir, nadir, ideal)
-                ]
+                ],
             )
-            delta_ideal = np.max(
+            delta_ideal = torch.max(
                 [
                     (id_t_1 - id_t) / (nad_t_1 - id_t)
                     for id_t_1, id_t, nad_t_1 in zip(self.__ideal, ideal, self.__nadir)
                 ]
             )
-            f = np.array(
+            f = torch.tensor(
                 [
                     [
                         (p - i) / (n - i)
                         for p, i, n in zip(x, self.__ideal, self.__nadir)
                     ]
-                    for x in f[:]
-                ]
+                    for x in f
+                ],
+                device=device,
             )
-            phy = sum(
-                [np.min([np.linalg.norm(p - q) for q in f[:]]) for p in self.__old_f[:]]
-            ) / len(self.__old_f)
+            aux_tensor = torch.tensor = [
+                torch.min([torch.norm(p - q) for q in f]) for p in self.__old_f
+            ]
+            phy = torch.sum(aux_tensor) / len(self.__old_f)
             self.__nadir = nadir
             self.__ideal = ideal
             self.__old_f = f
@@ -503,7 +517,7 @@ class AMOSA:
 
     def __compute_fitness_range(self, x, y):
         f = [s["f"] for s in self.__archive] + [x["f"], y["f"]]
-        return np.max(f, axis=0) - np.min(f, axis=0)
+        return torch.max(f, axis=0) - torch.min(f, axis=0)
 
 
 def hill_climbing(problem: AMOSA.Problem, x: dict, max_iterations: int):
@@ -659,25 +673,26 @@ def do_clustering(
     archive: List[Dict], hard_limit: int
 ):  # en esta parte se tarda un chorro, tal vez pueda optimizarla
     while len(archive) > hard_limit:
-        d = np.array(
+        d = torch.tensor(
             [
                 [
-                    np.linalg.norm(np.array(i["f"]) - np.array(j["f"]))
-                    if not np.array_equal(np.array(i["x"]), np.array(j["x"]))
-                    else np.nan
+                    torch.norm(torch.tensor(i["f"]) - torch.tensor(j["f"]))
+                    if not torch.equal(torch.tensor(i["x"]), torch.tensor(j["x"]))
+                    else torch.nan
                     for j in archive
                 ]
                 for i in archive
             ]
         )
         try:
-            i_min = np.nanargmin(d)
+            d = d[torch.isnan(d)] = torch.inf
+            i_min = torch.min(d)
             r = int(i_min / len(archive))
             c = i_min % len(archive)
             del archive[
                 r
-                if np.where(d[r] == np.nanmin(d[r]))[0].size
-                > np.where(d[c] == np.nanmin(d[c]))[0].size
+                if torch.where(d[r] == torch.min(d[r]))[0].size
+                > torch.where(d[c] == torch.min(d[c]))[0].size
                 else c
             ]
         except:
@@ -733,8 +748,8 @@ def accept(probability: float):  # ver si cambiar o no la sol
 
 
 def domination_amount(x, y, r):
-    return np.prod([abs(i - j) / k for i, j, k in zip(x["f"], y["f"], r)])
+    return torch.prod([abs(i - j) / k for i, j, k in zip(x["f"], y["f"], r)])
 
 
 def sigmoid(x):  # calcular la probabilidad dada la delta avg
-    return 1 / (1 + np.exp(np.array(-x, dtype=np.longdouble)))
+    return 1 / (1 + torch.exp(torch.tensor(-x, dtype=torch.long, device=device)))
