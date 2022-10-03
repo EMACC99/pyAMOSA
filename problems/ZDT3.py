@@ -19,39 +19,40 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from AMOSA import *
 
 
-class ZDT2(AMOSA.Problem):
+class ZDT3(AMOSA.Problem):
     n_var = 30
 
     def __init__(self):
-<<<<<<<< HEAD:ZDT2.py
-        n_var = 30
-        AMOSA.Problem.__init__(self, num_of_variables= n_var, 
-                               types = [AMOSA.Type.REAL] * n_var, 
-                               lower_bounds=[0]*n_var, upper_bounds= [1] * n_var,
-                               num_of_objectives= 2, num_of_constraints= 0)
-========
-        AMOSA.Problem.__init__(self, ZDT2.n_var, [AMOSA.Type.REAL] * ZDT2.n_var, [0] * ZDT2.n_var, [1] * ZDT2.n_var, 2, 0)
->>>>>>>> 0f6e5121d8bbb93ae09650966081ab809bdccdfe:problems/ZDT2.py
+
+        AMOSA.Problem.__init__(self, ZDT3.n_var, [AMOSA.Type.REAL] * ZDT3.n_var, [0] * ZDT3.n_var, [1] * ZDT3.n_var, 2, 0)
 
     def evaluate(self, x, out):
         f = x[0]
         g = 1 + 9 * sum(x[1:]) / (self.num_of_variables - 1)
-        h = 1 - (f / g) ** 2
+        h = 1 - np.sqrt(f / g) - (f / g) * np.sin(10* np.pi * f)
         out["f"] = [f, g * h ]
         pass
 
     def optimums(self):
         """
         Optimum:
-        0 <= x_1 <= 1, x_i = 0 for each i in 2...n
+        0 ≤ 𝑥_1 ≤ 0.0830
+        0.1822 ≤ 𝑥_1 ≤ 0.2577
+        0.4093 ≤ 𝑥_1 ≤ 0.4538
+        0.6183 ≤ 𝑥_1 ≤ 0.6525
+        0.8233 ≤𝑥_1 ≤ 0.8518
+        𝑥_𝑖 = 0 for 𝑖 = 2,...,𝑛
         """
-        pareto_set = np.linspace(0, 1, 100)
-        out =   [
-                    {   "x": [x] + [0] * (ZDT2.n_var-1),
-                        "f": [0] * self.num_of_objectives,
-                        "g": [0] * self.num_of_constraints if self.num_of_constraints > 0 else None
-                    } for x in pareto_set
-                 ]
+        out = []
+        bounds = [[0, 0.1822, 0.4093, 0.6183, 0.8233], [0.0830, 0.2577, 0.4538, 0.6525, 0.8518]]
+        for i in range(len(bounds[0])):
+            pareto_set = np.linspace(bounds[0][i], bounds[1][i], 100)
+            out = out + [
+                        {   "x": [x] + [0] * (ZDT3.n_var-1),
+                            "f": [0] * self.num_of_objectives,
+                            "g": [0] * self.num_of_constraints if self.num_of_constraints > 0 else None
+                        } for x in pareto_set
+                     ]
         for o in out:
             self.evaluate(o["x"], o)
         return out
