@@ -17,18 +17,18 @@ Street, Fifth Floor, Boston, MA 02110-1301, USA.
 """
 from AMOSA import *
 
-class ZDT4(AMOSA.Problem):
+class ZDT3(AMOSA.Problem):
     def __init__(self):
-        AMOSA.Problem.__init__(self, num_of_variables= 10,
-                                types=[AMOSA.Type.REAL] * 10, 
-                                lower_bounds = [0, -10, -10, -10, -10, -10, -10, -10, -10, -10],
-                                upper_bounds= [1, 10, 10, 10, 10, 10, 10, 10, 10, 10], 
-                                num_of_objectives= 2, num_of_constraints= 0)
+        n_var = 30
+        AMOSA.Problem.__init__(self, num_of_variables= n_var,
+                               types= [AMOSA.Type.REAL] * n_var,
+                               lower_bounds= [0] * n_var, upper_bounds= [1] * n_var,
+                               num_of_objectives= 2, num_of_constraints= 0)
 
     def evaluate(self, x, out):
         f = x[0]
-        g = 1 + 10 * 9 + sum( [ i**2 - 10 * np.cos(4 * np.pi * i) for i in x[1:] ] )
-        h = 1 - np.sqrt(f / g)
+        g = 1 + 9 * sum(x[1:]) / (self.num_of_variables - 1)
+        h = 1 - np.sqrt(f / g) - (f / g) * np.sin(10* np.pi * f)
         out["f"] = [f, g * h ]
         pass
 
@@ -38,16 +38,16 @@ if __name__ == '__main__':
     config.archive_hard_limit = 75
     config.archive_soft_limit = 150
     config.archive_gamma = 2
-    config.hill_climbing_iterations = 2500
+    config.hill_climbing_iterations = 1500
     config.initial_temperature = 500
     config.final_temperature = 0.0000001
     config.cooling_factor = 0.9
     config.annealing_iterations = 2500
     config.early_terminator_window = 15
 
-    problem = ZDT4()
+    problem = ZDT3()
     optimizer = AMOSA(config)
     optimizer.minimize(problem)
-    optimizer.save_results(problem, "zdt4.csv")
-    optimizer.plot_pareto(problem, "zdt4.pdf")
+    optimizer.save_results(problem, "zdt3.csv")
+    optimizer.plot_pareto(problem, "zdt3.pdf")
 

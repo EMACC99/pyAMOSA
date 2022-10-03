@@ -1,5 +1,6 @@
+#!/usr/bin/python3
 """
-Copyright 2021-2022 Salvatore Barone <salvatore.barone@unina.it>
+Copyright 2021 Salvatore Barone <salvatore.barone@unina.it>
 
 This is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free
@@ -14,24 +15,14 @@ You should have received a copy of the GNU General Public License along with
 RMEncoder; if not, write to the Free Software Foundation, Inc., 51 Franklin
 Street, Fifth Floor, Boston, MA 02110-1301, USA.
 """
-import os, sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from AMOSA import *
 
-
-
 class BNH(AMOSA.Problem):
-    n_var = 2
-
     def __init__(self):
-<<<<<<<< HEAD:BNH.py
         AMOSA.Problem.__init__(self, num_of_variables= 2,
                                types = [AMOSA.Type.REAL] * 2,
                                lower_bounds= [0]*2, upper_bounds= [5, 3],
                                num_of_objectives= 2, num_of_constraints= 2)
-========
-        AMOSA.Problem.__init__(self, BNH.n_var, [AMOSA.Type.REAL] * BNH.n_var, [0] * BNH.n_var, [5, 3], 2, 2)
->>>>>>>> 0f6e5121d8bbb93ae09650966081ab809bdccdfe:problems/BNH.py
 
     def evaluate(self, x, out):
         f1 = 4 * x[0] ** 2 + 4 * x[1] ** 2
@@ -41,15 +32,21 @@ class BNH(AMOSA.Problem):
         out["f"] = [f1, f2 ]
         out["g"] = [g1, g2]
 
-    def optimums(self):
-        pareto_set = np.linspace(0, 3, 100)
-        out = [{    "x": [x, x],
-                    "f": [0] * self.num_of_objectives,
-                    "g": [0] * self.num_of_constraints if self.num_of_constraints > 0 else None} for x in pareto_set ]
-        pareto_set = np.linspace(3, 5, 100)
-        out = out + [{  "x": [x, 3],
-                        "f": [0] * self.num_of_objectives,
-                        "g": [0] * self.num_of_constraints if self.num_of_constraints > 0 else None} for x in pareto_set ]
-        for o in out:
-            self.evaluate(o["x"], o)
-        return out
+if __name__ == '__main__':
+    config = AMOSAConfig
+    config.archive_hard_limit = 75
+    config.archive_soft_limit = 150
+    config.archive_gamma = 2
+    config.hill_climbing_iterations = 2500
+    config.initial_temperature = 500
+    config.final_temperature = 0.0000001
+    config.cooling_factor = 0.9
+    config.annealing_iterations = 2500
+    config.early_terminator_window = 15
+
+    problem = BNH()
+    optimizer = AMOSA(config)
+    optimizer.minimize(problem)
+    optimizer.save_results(problem, "bnh.csv")
+    optimizer.plot_pareto(problem, "bnh.pdf")
+
