@@ -195,10 +195,13 @@ class AMOSA:
                         x = y
                 elif dominates(y, x):  # caso 3
                     if k_s_dominating_y >= 1:
-                        delta_dom = [
-                            domination_amount(s, y, fitness_range)
-                            for s in s_dominating_y
-                        ]
+                        delta_dom = torch.tensor(
+                            [
+                                domination_amount(s, y, fitness_range)
+                                for s in s_dominating_y
+                            ],
+                            device=device,
+                        )
                         if accept(sigmoid(min(delta_dom))):
                             x = self.__archive[torch.argmin(delta_dom)]
                     elif (
@@ -231,10 +234,10 @@ class AMOSA:
         self.__print_statistics(problem)
         self.duration = time.time() - self.duration
 
-    def pareto_front(self) -> np.ndarray:
+    def pareto_front(self) -> torch.Tensor:
         return torch.tensor([s["f"] for s in self.__archive], device=device)
 
-    def pareto_set(self) -> np.ndarray:
+    def pareto_set(self) -> torch.Tensor:
         return torch.tensor([s["x"] for s in self.__archive], device=device)
 
     def constraint_violation(self):
@@ -456,20 +459,22 @@ class AMOSA:
             )
 
     def __compute_cv(self):
-        g = np.array([s["g"] for s in self.__archive])
-        feasible = np.all(np.less(g, 0), axis=1).sum()
-        g = g[np.where(g > 0)]
+        g = torch.tensor([s["g"] for s in self.__archive], device=device)
+        feasible = torch.sum(torch.all(torch.less(g, 0), 1))
+        g = g[torch.where(g > 0)]
         return (
             feasible,
-            0 if len(g) == 0 else np.min(g),
-            0 if len(g) == 0 else np.average(g),
+            0 if len(g) == 0 else torch.min(g),
+            0 if len(g) == 0 else torch.mean(g),
         )
 
     def __compute_deltas(self):
-        f = torch.tensor([s["f"] for s in self.__archive], device=device)
+        f = torch.tensor(
+            [s["f"] for s in self.__archive], device=device, dtype=torch.float
+        )
         if self.__nadir is None and self.__ideal is None and self.__old_f is None:
-            self.__nadir = torch.max(f, axis=0)
-            self.__ideal = torch.min(f, axis=0)
+            self.__nadir = torch.max(f, 0)[0]
+            self.__ideal = torch.min(f, 0)[0]
             self.__old_f = torch.tensor(
                 [
                     [
@@ -482,19 +487,27 @@ class AMOSA:
             )
             return torch.inf, torch.inf, 0
         else:
-            nadir = torch.max(f, axis=0)
-            ideal = torch.min(f, axis=0)
+            nadir = torch.max(f, 0)[0]
+            ideal = torch.min(f, 0)[0]
             delta_nad = torch.max(
-                [
-                    (nad_t_1 - nad_t) / (nad_t_1 - id_t)
-                    for nad_t_1, nad_t, id_t in zip(self.__nadir, nadir, ideal)
-                ],
+                torch.tensor(
+                    [
+                        (nad_t_1 - nad_t) / (nad_t_1 - id_t)
+                        for nad_t_1, nad_t, id_t in zip(self.__nadir, nadir, ideal)
+                    ],
+                    device=device,
+                )
             )
             delta_ideal = torch.max(
-                [
-                    (id_t_1 - id_t) / (nad_t_1 - id_t)
-                    for id_t_1, id_t, nad_t_1 in zip(self.__ideal, ideal, self.__nadir)
-                ]
+                torch.tensor(
+                    [
+                        (id_t_1 - id_t) / (nad_t_1 - id_t)
+                        for id_t_1, id_t, nad_t_1 in zip(
+                            self.__ideal, ideal, self.__nadir
+                        )
+                    ],
+                    device=device,
+                )
             )
             f = torch.tensor(
                 [
@@ -506,18 +519,27 @@ class AMOSA:
                 ],
                 device=device,
             )
-            aux_tensor = torch.tensor = [
-                torch.min([torch.norm(p - q) for q in f]) for p in self.__old_f
-            ]
-            phy = torch.sum(aux_tensor) / len(self.__old_f)
+
+            aux_tensor = torch.tensor(
+                [
+                    torch.min(torch.tensor([torch.norm(p - q) for q in f]))
+                    for p in self.__old_f
+                ],
+                device=device,
+            )
+            phy = torch.sum(aux_tensor) / self.__old_f.size()[0]
             self.__nadir = nadir
             self.__ideal = ideal
             self.__old_f = f
             return delta_nad, delta_ideal, phy
 
     def __compute_fitness_range(self, x, y):
-        f = [s["f"] for s in self.__archive] + [x["f"], y["f"]]
-        return torch.max(f, axis=0) - torch.min(f, axis=0)
+        f = torch.tensor(
+            [s["f"] for s in self.__archive] + [x["f"], y["f"]],
+            device=device,
+            dtype=torch.float,
+        )
+        return torch.max(f, 0)[0] - torch.min(f, 0)[0]
 
 
 def hill_climbing(problem: AMOSA.Problem, x: dict, max_iterations: int):
@@ -748,8 +770,12 @@ def accept(probability: float):  # ver si cambiar o no la sol
 
 
 def domination_amount(x, y, r):
-    return torch.prod([abs(i - j) / k for i, j, k in zip(x["f"], y["f"], r)])
+    dividend = torch.tensor(
+        [abs(i - j) for i, j in zip(x["f"], y["f"])], device=device, dtype=torch.float
+    )
+    result = torch.div(dividend, r)
+    return torch.prod(result)
 
 
 def sigmoid(x):  # calcular la probabilidad dada la delta avg
-    return 1 / (1 + torch.exp(torch.tensor(-x, dtype=torch.long, device=device)))
+    return 1 / (1 + torch.exp(torch.tensor(-x, device=device)))
