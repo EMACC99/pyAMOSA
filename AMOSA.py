@@ -778,4 +778,4 @@ def domination_amount(x, y, r):
 
 
 def sigmoid(x):  # calcular la probabilidad dada la delta avg
-    return 1 / (1 + torch.exp(torch.tensor(-x, device=device)))
+    return 1 / (1 + torch.exp(-x))
