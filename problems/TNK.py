@@ -15,20 +15,23 @@ RMEncoder; if not, write to the Free Software Foundation, Inc., 51 Franklin
 Street, Fifth Floor, Boston, MA 02110-1301, USA.
 """
 import os, sys
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from AMOSA import *
 
 
 class TNK(AMOSA.Problem):
     def __init__(self):
-        AMOSA.Problem.__init__(self, 2, [AMOSA.Type.REAL] * 2, [0.0000001] * 2, [np.pi] * 2, 2, 2)
+        AMOSA.Problem.__init__(
+            self, 2, [AMOSA.Type.REAL] * 2, [0.0000001] * 2, [np.pi] * 2, 2, 2
+        )
 
     def evaluate(self, x, out):
         f1 = x[0]
         f2 = x[1]
-        g1 = 1 + 0.1 * np.cos( 16 * np.arctan(x[0] / x[1])) - x[0] ** 2 - x[1] ** 2
+        g1 = 1 + 0.1 * np.cos(16 * np.arctan(x[0] / x[1])) - x[0] ** 2 - x[1] ** 2
         g2 = (x[0] - 0.5) ** 2 + (x[1] - 0.5) ** 2 - 0.5
-        out["f"] = [f1, f2 ]
+        out["f"] = [f1, f2]
         out["g"] = [g1, g2]
 
     def optimums(self):
@@ -37,10 +40,18 @@ class TNK(AMOSA.Problem):
         out = []
         for x1 in set1:
             for x2 in set2:
-                if ((1 + 0.1 * np.cos(16 * np.arctan(x1 / x2)) - x1 ** 2 - x2 ** 2) <= 0) and (((x1 - 0.5) ** 2 + (x2 - 0.5) ** 2 - 0.5) <= 0):
-                    out.append({"x": [x1, x2], "f": [0] * self.num_of_objectives, "g": [0] * self.num_of_constraints if self.num_of_constraints > 0 else None})
+                if (
+                    (1 + 0.1 * np.cos(16 * np.arctan(x1 / x2)) - x1**2 - x2**2) <= 0
+                ) and (((x1 - 0.5) ** 2 + (x2 - 0.5) ** 2 - 0.5) <= 0):
+                    out.append(
+                        {
+                            "x": [x1, x2],
+                            "f": [0] * self.num_of_objectives,
+                            "g": [0] * self.num_of_constraints
+                            if self.num_of_constraints > 0
+                            else None,
+                        }
+                    )
         for o in out:
             self.evaluate(o["x"], o)
         return out
-
-

@@ -15,6 +15,7 @@ RMEncoder; if not, write to the Free Software Foundation, Inc., 51 Franklin
 Street, Fifth Floor, Boston, MA 02110-1301, USA.
 """
 import os, sys
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from AMOSA import *
 
@@ -24,13 +25,21 @@ class ZDT3(AMOSA.Problem):
 
     def __init__(self):
 
-        AMOSA.Problem.__init__(self, ZDT3.n_var, [AMOSA.Type.REAL] * ZDT3.n_var, [0] * ZDT3.n_var, [1] * ZDT3.n_var, 2, 0)
+        AMOSA.Problem.__init__(
+            self,
+            ZDT3.n_var,
+            [AMOSA.Type.REAL] * ZDT3.n_var,
+            [0.] * ZDT3.n_var,
+            [1.] * ZDT3.n_var,
+            2,
+            0,
+        )
 
     def evaluate(self, x, out):
         f = x[0]
         g = 1 + 9 * sum(x[1:]) / (self.num_of_variables - 1)
-        h = 1 - np.sqrt(f / g) - (f / g) * np.sin(10* np.pi * f)
-        out["f"] = [f, g * h ]
+        h = 1 - np.sqrt(f / g) - (f / g) * np.sin(10 * np.pi * f)
+        out["f"] = [f, g * h]
         pass
 
     def optimums(self):
@@ -44,15 +53,22 @@ class ZDT3(AMOSA.Problem):
         𝑥_𝑖 = 0 for 𝑖 = 2,...,𝑛
         """
         out = []
-        bounds = [[0, 0.1822, 0.4093, 0.6183, 0.8233], [0.0830, 0.2577, 0.4538, 0.6525, 0.8518]]
+        bounds = [
+            [0, 0.1822, 0.4093, 0.6183, 0.8233],
+            [0.0830, 0.2577, 0.4538, 0.6525, 0.8518],
+        ]
         for i in range(len(bounds[0])):
             pareto_set = np.linspace(bounds[0][i], bounds[1][i], 100)
             out = out + [
-                        {   "x": [x] + [0] * (ZDT3.n_var-1),
-                            "f": [0] * self.num_of_objectives,
-                            "g": [0] * self.num_of_constraints if self.num_of_constraints > 0 else None
-                        } for x in pareto_set
-                     ]
+                {
+                    "x": [x] + [0] * (ZDT3.n_var - 1),
+                    "f": [0] * self.num_of_objectives,
+                    "g": [0] * self.num_of_constraints
+                    if self.num_of_constraints > 0
+                    else None,
+                }
+                for x in pareto_set
+            ]
         for o in out:
             self.evaluate(o["x"], o)
         return out

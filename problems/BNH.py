@@ -15,34 +15,56 @@ RMEncoder; if not, write to the Free Software Foundation, Inc., 51 Franklin
 Street, Fifth Floor, Boston, MA 02110-1301, USA.
 """
 import os, sys
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from AMOSA import *
-
 
 
 class BNH(AMOSA.Problem):
     n_var = 2
 
     def __init__(self):
-        AMOSA.Problem.__init__(self, BNH.n_var, [AMOSA.Type.REAL] * BNH.n_var, [0] * BNH.n_var, [5, 3], 2, 2)
+        AMOSA.Problem.__init__(
+            self,
+            BNH.n_var,
+            [AMOSA.Type.REAL] * BNH.n_var,
+            [0.0] * BNH.n_var,
+            [5.0, 3.0],
+            2,
+            2,
+        )
 
     def evaluate(self, x, out):
         f1 = 4 * x[0] ** 2 + 4 * x[1] ** 2
         f2 = (x[0] - 5) ** 2 + (x[1] - 5) ** 2
         g1 = (x[0] - 5) ** 2 + x[1] ** 2 - 25
         g2 = 7.7 - (x[0] - 5) ** 2 - (x[1] + 3) ** 2
-        out["f"] = [f1, f2 ]
+        out["f"] = [f1, f2]
         out["g"] = [g1, g2]
 
     def optimums(self):
         pareto_set = np.linspace(0, 3, 100)
-        out = [{    "x": [x, x],
-                    "f": [0] * self.num_of_objectives,
-                    "g": [0] * self.num_of_constraints if self.num_of_constraints > 0 else None} for x in pareto_set ]
+        out = [
+            {
+                "x": [x, x],
+                "f": [0] * self.num_of_objectives,
+                "g": [0] * self.num_of_constraints
+                if self.num_of_constraints > 0
+                else None,
+            }
+            for x in pareto_set
+        ]
         pareto_set = np.linspace(3, 5, 100)
-        out = out + [{  "x": [x, 3],
-                        "f": [0] * self.num_of_objectives,
-                        "g": [0] * self.num_of_constraints if self.num_of_constraints > 0 else None} for x in pareto_set ]
+        out = out + [
+            {
+                "x": [x, 3],
+                "f": [0] * self.num_of_objectives,
+                "g": [0] * self.num_of_constraints
+                if self.num_of_constraints > 0
+                else None,
+            }
+            for x in pareto_set
+        ]
         for o in out:
             self.evaluate(o["x"], o)
         return out

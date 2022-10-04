@@ -15,20 +15,30 @@ RMEncoder; if not, write to the Free Software Foundation, Inc., 51 Franklin
 Street, Fifth Floor, Boston, MA 02110-1301, USA.
 """
 import os, sys
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from AMOSA import *
 
 
 class ZDT4(AMOSA.Problem):
     n_var = 10
+
     def __init__(self):
-        AMOSA.Problem.__init__(self, ZDT4.n_var, [AMOSA.Type.REAL] * ZDT4.n_var, [0, -10, -10, -10, -10, -10, -10, -10, -10, -10], [1, 10, 10, 10, 10, 10, 10, 10, 10, 10], 2, 0)
+        AMOSA.Problem.__init__(
+            self,
+            ZDT4.n_var,
+            [AMOSA.Type.REAL] * ZDT4.n_var,
+            [0.0, -10.0, -10.0, -10.0, -10.0, -10.0, -10.0, -10.0, -10.0, -10.0],
+            [1.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0, 10.0],
+            2,
+            0,
+        )
 
     def evaluate(self, x, out):
         f = x[0]
-        g = 1 + 10 * 9 + sum( [ i**2 - 10 * np.cos(4 * np.pi * i) for i in x[1:] ] )
+        g = 1 + 10 * 9 + sum([i**2 - 10 * np.cos(4 * np.pi * i) for i in x[1:]])
         h = 1 - np.sqrt(f / g)
-        out["f"] = [f, g * h ]
+        out["f"] = [f, g * h]
         pass
 
     def optimums(self):
@@ -37,12 +47,16 @@ class ZDT4(AMOSA.Problem):
         0 <= x_1 <= 1, x_i = 0 for each i in 2...n
         """
         pareto_set = np.linspace(0, 1, 100)
-        out =   [
-                    {   "x": [x] + [0] * (ZDT4.n_var-1),
-                        "f": [0] * self.num_of_objectives,
-                        "g": [0] * self.num_of_constraints if self.num_of_constraints > 0 else None
-                    } for x in pareto_set
-                 ]
+        out = [
+            {
+                "x": [x] + [0] * (ZDT4.n_var - 1),
+                "f": [0] * self.num_of_objectives,
+                "g": [0] * self.num_of_constraints
+                if self.num_of_constraints > 0
+                else None,
+            }
+            for x in pareto_set
+        ]
         for o in out:
             self.evaluate(o["x"], o)
         return out
