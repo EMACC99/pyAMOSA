@@ -56,8 +56,8 @@ def cli():
     required=True,
     help="Benchmark problem [BNH, OSY, TNK, ZDT1, ZDT2, ZDT3, ZDT4, ZDT6]",
 )
-def evaluate(prob):
-    problem = problems[prob]
+def evaluate(prob: str):
+    problem: AMOSA.Problem = problems[prob]
     opt = problem.optimums()
     archive = json.load(open(f"{prob}_final_archive.json"))
     real_pareto = np.array([s["f"] for s in opt])
