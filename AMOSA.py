@@ -699,7 +699,10 @@ def do_clustering(
             [
                 [
                     torch.norm(torch.tensor(i["f"]) - torch.tensor(j["f"]))
-                    if not torch.equal(torch.tensor(i["x"]), torch.tensor(j["x"]))
+                    if not torch.equal(
+                        torch.tensor(i["x"], dtype=torch.float),
+                        torch.tensor(j["x"], dtype=torch.float),
+                    )
                     else torch.nan
                     for j in archive
                 ]
