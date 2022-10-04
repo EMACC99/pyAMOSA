@@ -17,6 +17,7 @@ Street, Fifth Floor, Boston, MA 02110-1301, USA.
 """
 import json
 import os, sys
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from BNH import *
 from OSY import *
@@ -31,7 +32,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 import click
 
-problems = {"BNH": BNH(), "OSY": OSY(), "TNK": TNK(), "ZDT1": ZDT1(), "ZDT2": ZDT2(), "ZDT3": ZDT3(), "ZDT4": ZDT4(), "ZDT6": ZDT6()}
+problems = {
+    "BNH": BNH(),
+    "OSY": OSY(),
+    "TNK": TNK(),
+    "ZDT1": ZDT1(),
+    "ZDT2": ZDT2(),
+    "ZDT3": ZDT3(),
+    "ZDT4": ZDT4(),
+    "ZDT6": ZDT6(),
+}
 
 
 @click.group()
@@ -39,8 +49,13 @@ def cli():
     pass
 
 
-@cli.command('evaluate')
-@click.option('--prob', type = str, required = True, help = 'Benchmark problem [BNH, OSY, TNK, ZDT1, ZDT2, ZDT3, ZDT4, ZDT6]')
+@cli.command("evaluate")
+@click.option(
+    "--prob",
+    type=str,
+    required=True,
+    help="Benchmark problem [BNH, OSY, TNK, ZDT1, ZDT2, ZDT3, ZDT4, ZDT6]",
+)
 def evaluate(prob):
     problem = problems[prob]
     opt = problem.optimums()
@@ -48,34 +63,78 @@ def evaluate(prob):
     real_pareto = np.array([s["f"] for s in opt])
     est_pareto = np.array([s["f"] for s in archive])
     axis_labels = ["f0", "f1"]
-    plt.figure(figsize = (10, 10), dpi = 300)
-    plt.plot(real_pareto[:, 0], real_pareto[:, 1], 'r.', label="Actual Pareto-front")
-    plt.plot(est_pareto[:, 0], est_pareto[:, 1], 'b.', label="Estimation from AMOSA")
+    plt.figure(figsize=(10, 10), dpi=300)
+    plt.plot(real_pareto[:, 0], real_pareto[:, 1], "r.", label="Actual Pareto-front")
+    plt.plot(est_pareto[:, 0], est_pareto[:, 1], "b.", label="Estimation from AMOSA")
     plt.xlabel(axis_labels[0])
     plt.ylabel(axis_labels[1])
     plt.legend()
-    plt.savefig(f"{prob}_pareto_comparison.pdf", bbox_inches = 'tight', pad_inches = 0)
+    plt.savefig(f"{prob}_pareto_comparison.pdf", bbox_inches="tight", pad_inches=0)
     print(f"convergence: {convergence(real_pareto, est_pareto)}")
     print(f"dispersion: {dispersion(real_pareto, est_pareto)}")
 
 
-@cli.command('run')
-@click.option('--prob', type = str, required = True, help = 'Benchmark problem [BNH, OSY, TNK, ZDT1, ZDT2, ZDT3, ZDT4, ZDT6]')
-@click.option('--hard', type = int, required = False, default = 100, help = 'Hard limit')
-@click.option('--soft', type = int, required = False, default = 200, help = 'Soft limit')
-@click.option('--gamma', type = int, required = False, default = 2, help = 'Gamma')
-@click.option('--climb', type = int, required = False, default = 2500, help = 'Hill climbing iterations')
-@click.option('--itemp', type = float, required = False, default = 500, help = 'Initial temperature')
-@click.option('--ftemp', type = float, required = False, default = 1e-7, help = 'Final temperature')
-@click.option('--cool', type = float, required = False, default = 0.9, help = 'Cooling factor')
-@click.option('--iter', type = int, required = False, default = 2500, help = 'Annealing iterations')
-@click.option('--strg', type = int, required = False, default = 1, help = 'Perturbation strength')
-@click.option('--win', type = int, required = False, default = 10, help = 'PHY-based early-termination window size')
-@click.option('--json-file', type = str, required = False, default = None, help = 'Archive from previous run (JSON)')
-@click.option('--plot', is_flag = True, help = 'Enable continuous plot')
-@click.option('--attempts', type=int, default = 0, help="Maximum random-perturbation attempts")
-def run(prob, hard, soft, gamma, climb, itemp, ftemp, cool, iter, strg, win, json_file, plot, attempts):
-    """ Run a test problem """
+@cli.command("run")
+@click.option(
+    "--prob",
+    type=str,
+    required=True,
+    help="Benchmark problem [BNH, OSY, TNK, ZDT1, ZDT2, ZDT3, ZDT4, ZDT6]",
+)
+@click.option("--hard", type=int, required=False, default=100, help="Hard limit")
+@click.option("--soft", type=int, required=False, default=200, help="Soft limit")
+@click.option("--gamma", type=int, required=False, default=2, help="Gamma")
+@click.option(
+    "--climb", type=int, required=False, default=2500, help="Hill climbing iterations"
+)
+@click.option(
+    "--itemp", type=float, required=False, default=500, help="Initial temperature"
+)
+@click.option(
+    "--ftemp", type=float, required=False, default=1e-7, help="Final temperature"
+)
+@click.option("--cool", type=float, required=False, default=0.9, help="Cooling factor")
+@click.option(
+    "--iter", type=int, required=False, default=2500, help="Annealing iterations"
+)
+@click.option(
+    "--strg", type=int, required=False, default=1, help="Perturbation strength"
+)
+@click.option(
+    "--win",
+    type=int,
+    required=False,
+    default=10,
+    help="PHY-based early-termination window size",
+)
+@click.option(
+    "--json-file",
+    type=str,
+    required=False,
+    default=None,
+    help="Archive from previous run (JSON)",
+)
+@click.option("--plot", is_flag=True, help="Enable continuous plot")
+@click.option(
+    "--attempts", type=int, default=0, help="Maximum random-perturbation attempts"
+)
+def run(
+    prob,
+    hard,
+    soft,
+    gamma,
+    climb,
+    itemp,
+    ftemp,
+    cool,
+    iter,
+    strg,
+    win,
+    json_file,
+    plot,
+    attempts,
+):
+    """Run a test problem"""
     problem = problems[prob]
     config = AMOSAConfig
     config.archive_hard_limit = hard
@@ -96,17 +155,16 @@ def run(prob, hard, soft, gamma, climb, itemp, ftemp, cool, iter, strg, win, jso
     optimizer.cache_dir = f".{prob}_cache"
     if attempts != 0:
         problem.max_attempt = attempts
-    optimizer.run(problem, improve = json_file, plot = plot)
+    optimizer.run(problem, improve=json_file, plot=plot)
     print(f"Cache hits:{problem.cache_hits} over {problem.total_calls}")
     optimizer.archive_to_csv(problem, f"{prob}_final_archive.csv")
     optimizer.archive_to_json(f"{prob}_final_archive.json")
     optimizer.plot_pareto(problem, f"{prob}_pareto_front.pdf")
 
 
-
 cli.add_command(evaluate)
 cli.add_command(run)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cli()

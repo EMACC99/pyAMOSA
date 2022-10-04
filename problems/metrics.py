@@ -21,15 +21,19 @@ def coverage_sets(set_A, set_B):
     count = 0
     for b in set_B:
         for a in set_A:
-            if all(a <= b) and any (a < b):
+            if all(a <= b) and any(a < b):
                 count = count + 1
                 break
     return count / len(set_B)
 
 
 def convergence(R_star, R):
-    return sum([ min([ np.linalg.norm(r - r_star) for r_star in R_star]) for r in R ]) / len(R)
+    return sum(
+        [min([np.linalg.norm(r - r_star) for r_star in R_star]) for r in R]
+    ) / len(R)
 
 
 def dispersion(R_star, R):
-    return sum([min([np.linalg.norm(r - r_star) for r in R]) for r_star in R_star]) / len(R_star)
+    return sum(
+        [min([np.linalg.norm(r - r_star) for r in R]) for r_star in R_star]
+    ) / len(R_star)
