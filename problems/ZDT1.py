@@ -60,29 +60,3 @@ class ZDT1(AMOSA.Problem):
         for o in out:
             self.evaluate(o["x"], o)
         return out
-
-
-if __name__ == "__main__":
-    config = AMOSAConfig
-    config.archive_hard_limit = 75
-    config.archive_soft_limit = 150
-    config.archive_gamma = 2
-    config.hill_climbing_iterations = 2500
-    config.initial_temperature = 500
-    config.final_temperature = 0.0000001
-    config.cooling_factor = 0.9
-    config.annealing_iterations = 2500
-    config.early_terminator_window = 15
-
-    prob = "zdt1"
-
-    problem = ZDT1()
-    optimizer = AMOSA(config)
-    optimizer.hill_climb_checkpoint_file = f"{prob}_hill_climbing_checkpoint.json"
-    optimizer.minimize_checkpoint_file = f"{prob}_minimize_checkpoint.json"
-    optimizer.cache_dir = f".{prob}_cache"
-    optimizer.run(problem, plot=plot)
-    print(f"Cache hits:{problem.cache_hits} over {problem.total_calls}")
-    optimizer.archive_to_csv(problem, f"{prob}_final_archive.csv")
-    optimizer.archive_to_json(f"{prob}_final_archive.json")
-    optimizer.plot_pareto(problem, f"{prob}_pareto_front.pdf")
