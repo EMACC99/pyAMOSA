@@ -28,8 +28,8 @@ class ZDT2(AMOSA.Problem):
             self,
             ZDT2.n_var,
             [AMOSA.Type.REAL] * ZDT2.n_var,
-            [0.] * ZDT2.n_var,
-            [1.] * ZDT2.n_var,
+            [0.0] * ZDT2.n_var,
+            [1.0] * ZDT2.n_var,
             2,
             0,
         )

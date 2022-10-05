@@ -29,8 +29,8 @@ class ZDT3(AMOSA.Problem):
             self,
             ZDT3.n_var,
             [AMOSA.Type.REAL] * ZDT3.n_var,
-            [0.] * ZDT3.n_var,
-            [1.] * ZDT3.n_var,
+            [0.0] * ZDT3.n_var,
+            [1.0] * ZDT3.n_var,
             2,
             0,
         )
