@@ -17,22 +17,28 @@ Street, Fifth Floor, Boston, MA 02110-1301, USA.
 """
 from AMOSA import *
 
+
 class ZDT1(AMOSA.Problem):
     def __init__(self):
         n_var = 30
-        AMOSA.Problem.__init__(self, num_of_variables = n_var,
-                               types = [AMOSA.Type.REAL] * n_var,
-                               lower_bounds= [0]*n_var, upper_bounds= [1] * n_var,
-                               num_of_objectives= 2, num_of_constraints= 0)
+        AMOSA.Problem.__init__(
+            self,
+            num_of_variables=n_var,
+            types=[AMOSA.Type.REAL] * n_var,
+            lower_bounds=[0] * n_var,
+            upper_bounds=[1] * n_var,
+            num_of_objectives=2,
+            num_of_constraints=0,
+        )
 
     def evaluate(self, x, out):
         f = x[0]
         g = 1 + 9 * sum(x[1:]) / (self.num_of_variables - 1)
         h = 1 - np.sqrt(f / g)
-        out["f"] = [f, g * h ]
+        out["f"] = [f, g * h]
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     config = AMOSAConfig
     config.archive_hard_limit = 75
     config.archive_soft_limit = 150

@@ -17,23 +17,28 @@ Street, Fifth Floor, Boston, MA 02110-1301, USA.
 """
 from AMOSA import *
 
+
 class ZDT4(AMOSA.Problem):
     def __init__(self):
-        AMOSA.Problem.__init__(self, num_of_variables= 10,
-                                types=[AMOSA.Type.REAL] * 10, 
-                                lower_bounds = [0, -10, -10, -10, -10, -10, -10, -10, -10, -10],
-                                upper_bounds= [1, 10, 10, 10, 10, 10, 10, 10, 10, 10], 
-                                num_of_objectives= 2, num_of_constraints= 0)
+        AMOSA.Problem.__init__(
+            self,
+            num_of_variables=10,
+            types=[AMOSA.Type.REAL] * 10,
+            lower_bounds=[0, -10, -10, -10, -10, -10, -10, -10, -10, -10],
+            upper_bounds=[1, 10, 10, 10, 10, 10, 10, 10, 10, 10],
+            num_of_objectives=2,
+            num_of_constraints=0,
+        )
 
     def evaluate(self, x, out):
         f = x[0]
-        g = 1 + 10 * 9 + sum( [ i**2 - 10 * np.cos(4 * np.pi * i) for i in x[1:] ] )
+        g = 1 + 10 * 9 + sum([i**2 - 10 * np.cos(4 * np.pi * i) for i in x[1:]])
         h = 1 - np.sqrt(f / g)
-        out["f"] = [f, g * h ]
+        out["f"] = [f, g * h]
         pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     config = AMOSAConfig
     config.archive_hard_limit = 75
     config.archive_soft_limit = 150
@@ -50,4 +55,3 @@ if __name__ == '__main__':
     optimizer.minimize(problem)
     optimizer.save_results(problem, "zdt4.csv")
     optimizer.plot_pareto(problem, "zdt4.pdf")
-
