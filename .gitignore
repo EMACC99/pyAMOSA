@@ -136,3 +136,6 @@ dmypy.json
 *.json
 
 .*_cache
+
+*.old
++.prof
