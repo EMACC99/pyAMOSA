@@ -15,6 +15,19 @@ You should have received a copy of the GNU General Public License along with
 RMEncoder; if not, write to the Free Software Foundation, Inc., 51 Franklin
 Street, Fifth Floor, Boston, MA 02110-1301, USA.
 """
+
+import pstats
+
+# import pyximport
+
+# pyximport.install(pyimport=True)
+
+import warnings
+
+warnings.filterwarnings("ignore")
+
+import cProfile
+
 import json
 import os, sys
 
@@ -31,6 +44,8 @@ from metrics import *
 import numpy as np
 import matplotlib.pyplot as plt
 import click
+
+from datetime import datetime
 
 problems = {
     "BNH": BNH(),
@@ -81,8 +96,8 @@ def evaluate(prob: str):
     required=True,
     help="Benchmark problem [BNH, OSY, TNK, ZDT1, ZDT2, ZDT3, ZDT4, ZDT6]",
 )
-@click.option("--hard", type=int, required=False, default=100, help="Hard limit")
-@click.option("--soft", type=int, required=False, default=200, help="Soft limit")
+@click.option("--hard", type=int, required=False, default=75, help="Hard limit")
+@click.option("--soft", type=int, required=False, default=150, help="Soft limit")
 @click.option("--gamma", type=int, required=False, default=2, help="Gamma")
 @click.option(
     "--climb", type=int, required=False, default=2500, help="Hill climbing iterations"
@@ -135,7 +150,7 @@ def run(
     attempts,
 ):
     """Run a test problem"""
-    problem = problems[prob]
+    problem: AMOSA.Problem = problems[prob]
     config = AMOSAConfig
     config.archive_hard_limit = hard
     config.archive_soft_limit = soft
@@ -155,7 +170,16 @@ def run(
     optimizer.cache_dir = f".{prob}_cache"
     if attempts != 0:
         problem.max_attempt = attempts
-    optimizer.run(problem, improve=json_file, plot=plot)
+
+    with cProfile.Profile() as pr:
+        optimizer.run(problem, improve=json_file, plot=plot)
+
+    stats = pstats.Stats(pr)
+    stats.sort_stats(pstats.SortKey.TIME)
+    stats.print_stats()
+    dt_string = datetime.now().strftime("%d%m%Y%H:%M")
+    stats.dump_stats(f"profiler_{prob}_{dt_string}.prof")
+
     print(f"Cache hits:{problem.cache_hits} over {problem.total_calls}")
     optimizer.archive_to_csv(problem, f"{prob}_final_archive.csv")
     optimizer.archive_to_json(f"{prob}_final_archive.json")
