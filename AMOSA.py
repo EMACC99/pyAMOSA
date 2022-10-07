@@ -417,7 +417,7 @@ class AMOSA:
         AMOSA.get_objectives(problem, s)
 
     @staticmethod
-    def add_to_archive(archive, x):
+    def add_to_archive(archive: list, x: dict):
         if len(archive) == 0:
             archive.append(x)
         else:
@@ -709,7 +709,11 @@ class AMOSA:
         return np.array([s["g"] for s in self.__archive])
 
     def plot_pareto(
-        self, problem: Problem, pdf_file, fig_title="Pareto front", axis_labels=None
+        self,
+        problem: Problem,
+        pdf_file: str,
+        fig_title: str = "Pareto front",
+        axis_labels=None,
     ):
         if axis_labels is None:
             axis_labels = ["f" + str(i) for i in range(problem.num_of_objectives)]
@@ -720,7 +724,9 @@ class AMOSA:
             plt.xlabel(axis_labels[0])
             plt.ylabel(axis_labels[1])
             plt.title(fig_title)
-            plt.savefig(pdf_file, bbox_inches="tight", pad_inches=0)
+            # plt.savefig(pdf_file, bbox_inches="tight", pad_inches=0)
+            plt.savefig(pdf_file, pad_inches=0)
+
         elif problem.num_of_objectives == 3:
             fig = plt.figure()
             ax = fig.add_subplot(projection="3d")
@@ -730,7 +736,8 @@ class AMOSA:
             plt.title(fig_title)
             ax.scatter(F[:, 0], F[:, 1], F[:, 2], marker=".", color="k")
             plt.tight_layout()
-            plt.savefig(pdf_file, bbox_inches="tight", pad_inches=0)
+            # plt.savefig(pdf_file, bbox_inches="tight", pad_inches=0)
+            plt.savefig(pdf_file, pad_inches=0)
 
     def archive_to_json(self, json_file):
         try:
@@ -856,7 +863,7 @@ class AMOSA:
             problem, AMOSA.random_point(problem), hillclimb_iterations
         )
 
-    def __main_loop(self, problem, plot):
+    def __main_loop(self, problem: Problem, plot):
         current_point = random.choice(self.__archive)
         while self.__current_temperature > self.__final_temperature:
             if self.__multiprocessing_enables:
@@ -913,7 +920,7 @@ class AMOSA:
 
     @staticmethod
     def annealing_thread_loop(
-        problem,
+        problem: Problem,
         archive,
         current_point,
         current_temperature,
@@ -923,7 +930,7 @@ class AMOSA:
         hard_limit,
         clustering_max_iterations,
         clustering_before_return,
-        print_allowed,
+        print_allowed: bool,
     ):
         if print_allowed:
             AMOSA.print_progressbar(0, annealing_iterations, message="Annealing:")
