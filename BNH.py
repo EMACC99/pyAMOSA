@@ -17,22 +17,29 @@ Street, Fifth Floor, Boston, MA 02110-1301, USA.
 """
 from AMOSA import *
 
+
 class BNH(AMOSA.Problem):
     def __init__(self):
-        AMOSA.Problem.__init__(self, num_of_variables= 2,
-                               types = [AMOSA.Type.REAL] * 2,
-                               lower_bounds= [0]*2, upper_bounds= [5, 3],
-                               num_of_objectives= 2, num_of_constraints= 2)
+        AMOSA.Problem.__init__(
+            self,
+            num_of_variables=2,
+            types=[AMOSA.Type.REAL] * 2,
+            lower_bounds=[0] * 2,
+            upper_bounds=[5, 3],
+            num_of_objectives=2,
+            num_of_constraints=2,
+        )
 
     def evaluate(self, x, out):
         f1 = 4 * x[0] ** 2 + 4 * x[1] ** 2
         f2 = (x[0] - 5) ** 2 + (x[1] - 5) ** 2
         g1 = (x[0] - 5) ** 2 + x[1] ** 2 - 25
         g2 = 7.7 - (x[0] - 5) ** 2 - (x[1] + 3) ** 2
-        out["f"] = [f1, f2 ]
+        out["f"] = [f1, f2]
         out["g"] = [g1, g2]
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     config = AMOSAConfig
     config.archive_hard_limit = 75
     config.archive_soft_limit = 150
@@ -49,4 +56,3 @@ if __name__ == '__main__':
     optimizer.minimize(problem)
     optimizer.save_results(problem, "bnh.csv")
     optimizer.plot_pareto(problem, "bnh.pdf")
-

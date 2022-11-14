@@ -2,16 +2,19 @@ import numpy as np
 
 from AMOSA import *
 
+
 class Test(AMOSA.Problem):
     def __init__(self):
-        AMOSA.Problem.__init__(self, 2, [AMOSA.Type.INTEGER] * 2, [0] * 2, [100] * 2, 2, 0)
+        AMOSA.Problem.__init__(
+            self, 2, [AMOSA.Type.INTEGER] * 2, [0] * 2, [100] * 2, 2, 0
+        )
 
     def evaluate(self, x, out):
         out["f"] = x
         pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     problem = Test()
     optimizer = AMOSA()
     optimizer.archive_hard_limit = 5
@@ -26,4 +29,3 @@ if __name__ == '__main__':
     optimizer.minimize(problem)
     optimizer.save_results(problem, "test.csv")
     optimizer.plot_pareto(problem, "test.pdf")
-

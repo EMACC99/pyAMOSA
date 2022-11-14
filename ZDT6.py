@@ -17,23 +17,29 @@ Street, Fifth Floor, Boston, MA 02110-1301, USA.
 """
 from AMOSA import *
 
+
 class ZDT6(AMOSA.Problem):
     def __init__(self):
         n_var = 10
-        AMOSA.Problem.__init__(self, num_of_variables= n_var,
-                               types = [AMOSA.Type.REAL] * n_var,
-                               lower_bounds= [0]*n_var, upper_bounds= [1] * n_var,
-                               num_of_objectives= 2, num_of_constraints= 0)
+        AMOSA.Problem.__init__(
+            self,
+            num_of_variables=n_var,
+            types=[AMOSA.Type.REAL] * n_var,
+            lower_bounds=[0] * n_var,
+            upper_bounds=[1] * n_var,
+            num_of_objectives=2,
+            num_of_constraints=0,
+        )
 
     def evaluate(self, x, out):
         f = 1 - np.exp(-4 * x[0]) * np.power(np.sin(6 * np.pi * x[0]), 6)
-        g = 1 + 9 * np.power(sum(x[1:]) / 9, 1./4)
+        g = 1 + 9 * np.power(sum(x[1:]) / 9, 1.0 / 4)
         h = 1 - (f / g) ** 2
-        out["f"] = [f, g * h ]
+        out["f"] = [f, g * h]
         pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     config = AMOSAConfig
     config.archive_hard_limit = 75
     config.archive_soft_limit = 150
@@ -50,4 +56,3 @@ if __name__ == '__main__':
     optimizer.minimize(problem)
     optimizer.save_results(problem, "zdt6.csv")
     optimizer.plot_pareto(problem, "zdt6.pdf")
-
