@@ -19,6 +19,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from enum import Enum
 from typing import List, Dict, Tuple
+from typing_extensions import Self
 
 
 class AMOSAConfig:
@@ -68,7 +69,7 @@ class AMOSA:
             self.num_of_objectives = num_of_objectives
             self.num_of_constraints = num_of_constraints
 
-        def evaluate(self, x, out):
+        def evaluate(self, s: dict, out: dict, s_old: dict = None):
             pass
 
     def __init__(
@@ -82,7 +83,7 @@ class AMOSA:
         cooling_factor,
         annealing_iterations,
         early_termination_window,
-    ):
+    ) -> None:
         self.__archive_hard_limit = archive_hard_limit
         self.__archive_soft_limit = archive_soft_limit
         self.__archive_gamma = archive_gamma
@@ -101,24 +102,20 @@ class AMOSA:
         self.__old_f = []
         self.__phy = []
 
-    def __init__(self, config: AMOSAConfig):
-        self.__archive_hard_limit = config.archive_hard_limit
-        self.__archive_soft_limit = config.archive_soft_limit
-        self.__archive_gamma = config.archive_gamma
-        self.__hill_climbing_iterations = config.hill_climbing_iterations
-        self.__initial_temperature = config.initial_temperature
-        self.__final_temperature = config.final_temperature
-        self.__cooling_factor = config.cooling_factor
-        self.__annealing_iterations = config.annealing_iterations
-        self.__early_termination_window = config.annealing_iterations
-        self.__current_temperature = 0
-        self.__archive = []
-        self.duration = 0
-        self.__n_eval = 0
-        self.__ideal = None
-        self.__nadir = None
-        self.__old_f = []
-        self.__phy = []
+    @classmethod
+    def from_config(cls, config: AMOSAConfig) -> Self:
+
+        return AMOSA(
+            config.archive_hard_limit,
+            config.archive_soft_limit,
+            config.archive_gamma,
+            config.hill_climbing_iterations,
+            config.initial_temperature,
+            config.final_temperature,
+            config.cooling_factor,
+            config.annealing_iterations,
+            config.early_terminator_window,
+        )
 
     def minimize(self, problem: Problem):
         self.__parameters_check()
@@ -571,7 +568,7 @@ def random_perturbation(problem: AMOSA.Problem, s: dict):
     """
     z = copy.deepcopy(s)
     step = 0
-    d, up = hill_climbing_direction(problem)
+    # d, up = hill_climbing_direction(problem)
     while step == 0:
         d, up = hill_climbing_direction(problem)
         lower_bound = problem.lower_bound[d] - z["x"][d]
@@ -591,7 +588,7 @@ def random_perturbation(problem: AMOSA.Problem, s: dict):
                 else random.uniform(0, upper_bound)
             )
     z["x"][d] += step
-    get_objectives(problem, z)
+    get_objectives(problem, z, s)
     return z
 
 
@@ -685,14 +682,15 @@ def do_clustering(
             return
 
 
-def get_objectives(problem: AMOSA.Problem, s: dict):
+def get_objectives(problem: AMOSA.Problem, s: dict, s_old: dict = None):
+
     out = {
         "f": [0] * problem.num_of_objectives,
         "g": [0] * problem.num_of_constraints
         if problem.num_of_constraints > 0
         else None,
     }
-    problem.evaluate(s["x"], out)
+    problem.evaluate(s, out, s_old)
     s["f"] = out["f"]
     s["g"] = out["g"]
 
