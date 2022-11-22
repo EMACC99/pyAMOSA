@@ -69,9 +69,6 @@ class AMOSA:
             self.num_of_objectives = num_of_objectives
             self.num_of_constraints = num_of_constraints
 
-        def evaluate(self, s: dict, out: dict, s_old: dict = None):
-            pass
-
     def __init__(
         self,
         archive_hard_limit,
@@ -588,7 +585,7 @@ def random_perturbation(problem: AMOSA.Problem, s: dict):
                 else random.uniform(0, upper_bound)
             )
     z["x"][d] += step
-    get_objectives(problem, z, s)
+    get_objectives(problem, z)
     return z
 
 
@@ -682,7 +679,7 @@ def do_clustering(
             return
 
 
-def get_objectives(problem: AMOSA.Problem, s: dict, s_old: dict = None):
+def get_objectives(problem: AMOSA.Problem, s: dict):
 
     out = {
         "f": [0] * problem.num_of_objectives,
@@ -690,7 +687,7 @@ def get_objectives(problem: AMOSA.Problem, s: dict, s_old: dict = None):
         if problem.num_of_constraints > 0
         else None,
     }
-    problem.evaluate(s, out, s_old)
+    problem.evaluate(s, out)
     s["f"] = out["f"]
     s["g"] = out["g"]
 
