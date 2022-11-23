@@ -129,6 +129,10 @@ class AMOSA:
         self.__current_temperature = self.__initial_temperature
         x = random.choice(self.__archive)  # escoger una solucion random del archivo
         self.__print_statistics(problem)
+
+        ## ahora si imnplementar los time savings
+        problem.distance_matrix = False
+
         while (
             self.__current_temperature > self.__final_temperature
         ):  # empieza el algoritmo
@@ -156,6 +160,7 @@ class AMOSA:
                     ) / (k_s_dominating_y + 1)
                     if accept(sigmoid(-delta_avg * self.__current_temperature)):
                         x = y
+                        problem.update_distance_matrix()
                 elif not dominates(x, y) and not dominates(y, x):  # caso 2
                     if k_s_dominating_y >= 1:  # revisa la
                         delta_avg = (
@@ -169,6 +174,8 @@ class AMOSA:
                         )
                         if accept(sigmoid(-delta_avg * self.__current_temperature)):
                             x = y
+                            problem.update_distance_matrix()
+
                     elif (
                         k_s_dominating_y == 0 and k_s_dominated_by_y == 0
                     ) or k_s_dominated_by_y >= 1:
@@ -184,6 +191,8 @@ class AMOSA:
                         ]
                         if accept(sigmoid(min(delta_dom))):
                             x = self.__archive[np.argmin(delta_dom)]
+                            problem.update_distance_matrix()
+
                     elif (
                         k_s_dominating_y == 0 and k_s_dominated_by_y == 0
                     ) or k_s_dominated_by_y >= 1:
@@ -191,6 +200,8 @@ class AMOSA:
                         if len(self.__archive) > self.__archive_soft_limit:
                             self.__archive_clustering(problem)
                         x = y
+                        problem.update_distance_matrix()
+
                 else:
                     raise RuntimeError(
                         f"Something went wrong\narchive: {self.__archive}\nx:{x}\ny: {y}\n x < y: {dominates(x, y)}\n y < x: {dominates(y, x)}\ny domination rank: {k_s_dominated_by_y}\narchive domination rank: {k_s_dominating_y}"
@@ -293,6 +304,7 @@ class AMOSA:
             )
 
     def __initialize_archive(self, problem: Problem):
+        problem.distance_matrix = True
         print("Initializing archive...")
         self.__n_eval = (
             self.__archive_gamma
@@ -732,4 +744,4 @@ def domination_amount(x, y, r):
 
 
 def sigmoid(x):  # calcular la probabilidad dada la delta avg
-    return 1 / (1 + np.exp(np.array(-x, dtype=np.float128)))
+    return 1 / (1 + np.exp(np.array(-x, dtype=np.double)))
