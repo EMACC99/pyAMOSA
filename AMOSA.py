@@ -128,11 +128,12 @@ class AMOSA:
         self.__print_header(problem)
         self.__current_temperature = self.__initial_temperature
         x = random.choice(self.__archive)  # escoger una solucion random del archivo
+
         self.__print_statistics(problem)
 
         ## ahora si imnplementar los time savings
-        problem.distance_matrix = False
-
+        problem.initialize_archive = False
+        get_objectives(problem, x)
         while (
             self.__current_temperature > self.__final_temperature
         ):  # empieza el algoritmo
