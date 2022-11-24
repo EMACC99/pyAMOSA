@@ -305,7 +305,7 @@ class AMOSA:
             )
 
     def __initialize_archive(self, problem: Problem):
-        problem.distance_matrix = True
+        problem.initialize_archive = True
         print("Initializing archive...")
         self.__n_eval = (
             self.__archive_gamma
