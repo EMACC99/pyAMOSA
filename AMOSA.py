@@ -315,7 +315,11 @@ class AMOSA:
         num_of_initial_candidate_solutions = (
             self.__archive_gamma * self.__archive_soft_limit
         )
-        initial_candidate_solutions = [lower_point(problem), upper_point(problem)]
+        # initial_candidate_solutions = [lower_point(problem), upper_point(problem)]
+        initial_candidate_solutions = [
+            generate_initial_candidate_solutions(problem),
+            generate_initial_candidate_solutions(problem),
+        ]
         if self.__hill_climbing_iterations > 0:
             for i in range(num_of_initial_candidate_solutions):
                 print(
@@ -545,6 +549,22 @@ def random_point(problem: AMOSA.Problem):
         else None,
     }
     get_objectives(problem, x)
+    return x
+
+
+def generate_initial_candidate_solutions(problem: AMOSA.Problem) -> dict:
+    """
+    Function to prevent generating a solution that contains empty clusters
+    """
+    selecciones = np.random.choice(np.arange(problem.A.shape[0]), problem.k)
+    x = {
+        "x": [problem.A[selecciones[i]][:-1] for i in selecciones],
+        "f": [0] * problem.num_of_objectives,
+        "g": [0] * problem.num_of_constraints
+        if problem.num_of_constraints > 0
+        else None,
+    }
+    get_objectives(x)
     return x
 
 
