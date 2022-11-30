@@ -557,14 +557,20 @@ def generate_initial_candidate_solutions(problem: AMOSA.Problem) -> dict:
     Function to prevent generating a solution that contains empty clusters
     """
     selecciones = np.random.choice(np.arange(problem.A.shape[0]), problem.k)
+
+    aux = []
+    for ix in selecciones:
+        aux.append(problem.A[ix][0])
+        aux.append(problem.A[ix][1])
+
     x = {
-        "x": [problem.A[selecciones[i]][:-1] for i in selecciones],
+        "x": aux,
         "f": [0] * problem.num_of_objectives,
         "g": [0] * problem.num_of_constraints
         if problem.num_of_constraints > 0
         else None,
     }
-    get_objectives(x)
+    get_objectives(problem, x)
     return x
 
 
