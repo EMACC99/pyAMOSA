@@ -25,15 +25,16 @@ from typing_extensions import Self
 class AMOSAConfig:
     def __init__(
         self,
-        archive_hard_limit=20,
-        archive_soft_limit=50,
-        archive_gamma=2,
-        hill_climbing_iterations=500,
-        initial_temperature=500,
-        final_temperature=0.000001,
-        cooling_factor=0.9,
-        annealing_iterations=500,
-        early_termination_window=0,
+        archive_hard_limit,
+        archive_soft_limit,
+        archive_gamma,
+        hill_climbing_iterations,
+        initial_temperature,
+        final_temperature,
+        cooling_factor,
+        annealing_iterations,
+        early_termination_window,
+        random_seed=None,
     ):
         self.archive_hard_limit = archive_hard_limit
         self.archive_soft_limit = archive_soft_limit
@@ -44,6 +45,7 @@ class AMOSAConfig:
         self.cooling_factor = cooling_factor
         self.annealing_iterations = annealing_iterations
         self.early_terminator_window = early_termination_window
+        self.random_seed = random_seed
 
 
 class AMOSA:
@@ -61,13 +63,19 @@ class AMOSA:
             upper_bounds,
             num_of_objectives,
             num_of_constraints,
-        ):
+            alpha,
+        ) -> None:
             self.num_of_variables = num_of_variables
             self.types = types
             self.lower_bound = lower_bounds
             self.upper_bound = upper_bounds
             self.num_of_objectives = num_of_objectives
             self.num_of_constraints = num_of_constraints
+            self.__alpha = alpha
+
+        @property
+        def alpha(self):
+            return self.__alpha
 
     def __init__(
         self,
@@ -80,6 +88,7 @@ class AMOSA:
         cooling_factor,
         annealing_iterations,
         early_termination_window,
+        random_seed,
     ) -> None:
         self.__archive_hard_limit = archive_hard_limit
         self.__archive_soft_limit = archive_soft_limit
@@ -99,6 +108,8 @@ class AMOSA:
         self.__old_f = []
         self.__phy = []
 
+        random.seed(random_seed)
+
     @classmethod
     def from_config(cls, config: AMOSAConfig) -> Self:
 
@@ -112,6 +123,7 @@ class AMOSA:
             config.cooling_factor,
             config.annealing_iterations,
             config.early_terminator_window,
+            config.random_seed,
         )
 
     def minimize(self, problem: Problem):
@@ -556,12 +568,11 @@ def generate_initial_candidate_solutions(problem: AMOSA.Problem) -> dict:
     """
     Function to prevent generating a solution that contains empty clusters
     """
-    selecciones = np.random.choice(np.arange(problem.A.shape[0]), problem.k)
-
+    selecciones = random.choices(problem.A, k=problem.k)
     aux = []
-    for ix in selecciones:
-        aux.append(problem.A[ix][0])
-        aux.append(problem.A[ix][1])
+    for selec in selecciones:
+        aux.append(selec[0])
+        aux.append(selec[1])
 
     x = {
         "x": aux,
@@ -623,7 +634,7 @@ def random_perturbation(problem: AMOSA.Problem, s: dict):
                 if up == -1
                 else random.uniform(0, upper_bound)
             )
-    z["x"][d] += step
+    z["x"][d] += problem.alpha * step
     get_objectives(problem, z)
     return z
 
@@ -684,7 +695,7 @@ def hill_climbing_adaptive_step(problem: AMOSA.Problem, s: dict, d: int, up: int
                 if up == -1
                 else random.uniform(0, upper_bound)
             )
-    s["x"][d] += step  # muta la solucion en esta variable
+    s["x"][d] += problem.alpha * step  # muta la solucion en esta variable
     get_objectives(problem, s)  # re evaluamos la solucion
 
 
